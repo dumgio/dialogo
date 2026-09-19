@@ -19,32 +19,45 @@ export function creaIncontro({ durata, gruppo, luogo, domanda, ora }) {
     fasi: minuti.map((m) => ({ minuti: m })),
     indice: 0,
     finito: false,
-    inizioFase: ora,
-    durataFaseMs: minuti[0] * 60000,
+    fineFase: ora + minuti[0] * 60000,
+    fine: ora + minuti.reduce((a, b) => a + b, 0) * 60000,
     tempoIntervento: 0,
   };
 }
 
+// Passa alla fase successiva. Il tempo risparmiato (o perso) nella fase appena chiusa passa al dialogo aperto,
+// così la fine prevista dell'incontro non si sposta. Il dialogo non scende sotto i 10 minuti: se serve, la fine slitta.
 export function avanti(st, ora) {
   if (st.indice >= st.fasi.length - 1) return { ...st, finito: true };
   const indice = st.indice + 1;
+  const fasi = st.fasi.map((f) => ({ ...f }));
+  let fine;
+  if (indice <= FASE_DIALOGO) {
+    const restantiMs = st.fine - ora;
+    const altriMs = fasi.reduce((somma, f, k) => (k >= indice && k !== FASE_DIALOGO ? somma + f.minuti * 60000 : somma), 0);
+    fasi[FASE_DIALOGO].minuti = Math.max(MIN_DIALOGO, (restantiMs - altriMs) / 60000);
+    fine = ora + fasi.slice(indice).reduce((somma, f) => somma + f.minuti * 60000, 0);
+  } else {
+    fine = ora + fasi[indice].minuti * 60000;
+  }
   return {
     ...st,
+    fasi,
     indice,
-    inizioFase: ora,
-    durataFaseMs: st.fasi[indice].minuti * 60000,
+    fineFase: ora + fasi[indice].minuti * 60000,
+    fine,
     tempoIntervento: indice === FASE_GIRO ? TEMPO_INTERVENTO[st.gruppo] : 0,
   };
 }
 
 // Secondi che restano nella fase in corso. Diventano negativi quando il tempo è scaduto.
 export function secondiFase(st, ora) {
-  return Math.round((st.inizioFase + st.durataFaseMs - ora) / 1000);
+  return Math.round((st.fineFase - ora) / 1000);
 }
 
+// Secondi che restano alla fine prevista dell'incontro.
 export function secondiTotali(st, ora) {
-  const dopo = st.fasi.slice(st.indice + 1).reduce((s, f) => s + f.minuti, 0);
-  return Math.max(0, secondiFase(st, ora)) + dopo * 60;
+  return Math.round((st.fine - ora) / 1000);
 }
 
 // Allunga (delta > 0) o accorcia (delta < 0) la fase in corso.
@@ -55,10 +68,18 @@ export function regolaFase(st, deltaMin) {
   const nuovo = Math.max(1, fasi[i].minuti + deltaMin);
   const effettivo = nuovo - fasi[i].minuti;
   fasi[i].minuti = nuovo;
+  let variazioneTotale = effettivo;
   if (i < FASE_DIALOGO) {
-    fasi[FASE_DIALOGO].minuti = Math.max(MIN_DIALOGO, fasi[FASE_DIALOGO].minuti - effettivo);
+    const dialogo = Math.max(MIN_DIALOGO, fasi[FASE_DIALOGO].minuti - effettivo);
+    variazioneTotale = effettivo - (fasi[FASE_DIALOGO].minuti - dialogo);
+    fasi[FASE_DIALOGO].minuti = dialogo;
   }
-  return { ...st, fasi, durataFaseMs: st.durataFaseMs + effettivo * 60000 };
+  return {
+    ...st,
+    fasi,
+    fineFase: st.fineFase + effettivo * 60000,
+    fine: st.fine + variazioneTotale * 60000,
+  };
 }
 
 export function formatTempo(secondi) {

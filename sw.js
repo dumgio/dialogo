@@ -1,6 +1,6 @@
 // Service worker di Dialogo: salva i file sul telefono così la app funziona senza connessione.
 // Quando cambi un file dell'app, cambia anche il numero di versione qui sotto.
-const CACHE = 'dialogo-v1';
+const CACHE = 'dialogo-v2';
 const FILE = [
   './', 'index.html', 'manifest.json', 'css/stile.css',
   'js/app.js', 'js/logic.js', 'js/content.js',
