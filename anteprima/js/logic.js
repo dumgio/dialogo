@@ -5,22 +5,47 @@ export const DURATE = {
   90: [12, 8, 16, 41, 13],
   120: [16, 11, 22, 55, 16],
 };
+export const DURATA_MIN = 30;
+export const DURATA_MAX = 240;
+const PESI_FASI = [15, 10, 20, 50, 15]; // le proporzioni del kit (110 minuti in tutto)
 export const TEMPO_INTERVENTO = { piccolo: 90, medio: 60, grande: 30 };
 export const FASE_GIRO = 2;
 export const FASE_DIALOGO = 3;
 export const MIN_DIALOGO = 10;
 
-export function creaIncontro({ durata, gruppo, luogo, domanda, ora }) {
-  const minuti = DURATE[durata];
-  if (!minuti) throw new Error('Durata non valida: ' + durata);
+// Minuti di ciascuna fase per una durata qualsiasi tra DURATA_MIN e DURATA_MAX.
+// Per 60, 90 e 120 minuti si usa la tabella; per le altre durate si rispettano le proporzioni del kit
+// e il dialogo aperto prende il resto, così la somma è sempre esatta.
+export function minutiFasi(totale) {
+  if (DURATE[totale]) return [...DURATE[totale]];
+  const somma = PESI_FASI.reduce((a, b) => a + b, 0);
+  const fasi = PESI_FASI.map((p) => Math.max(1, Math.round((totale * p) / somma)));
+  const altri = fasi.reduce((a, m, i) => (i === FASE_DIALOGO ? a : a + m), 0);
+  fasi[FASE_DIALOGO] = totale - altri;
+  return fasi;
+}
+
+// Crea un incontro. Con «minuti» (5 numeri) le fasi sono quelle indicate; altrimenti si calcolano da «durata».
+export function creaIncontro({ durata, gruppo, luogo, domanda, ora, minuti }) {
+  let fasiMinuti = minuti;
+  if (fasiMinuti) {
+    if (!Array.isArray(fasiMinuti) || fasiMinuti.length !== PESI_FASI.length || !fasiMinuti.every((m) => Number.isFinite(m) && m >= 1)) {
+      throw new Error('Fasi non valide: servono 5 numeri di minuti, ciascuno di almeno 1');
+    }
+  } else {
+    if (!Number.isInteger(durata) || durata < DURATA_MIN || durata > DURATA_MAX) throw new Error('Durata non valida: ' + durata);
+    fasiMinuti = minutiFasi(durata);
+  }
   if (!TEMPO_INTERVENTO[gruppo]) throw new Error('Gruppo non valido: ' + gruppo);
+  const totale = fasiMinuti.reduce((a, b) => a + b, 0);
   return {
-    durata, gruppo, luogo, domanda,
-    fasi: minuti.map((m) => ({ minuti: m })),
+    durata: totale, gruppo, luogo, domanda,
+    fasi: fasiMinuti.map((m) => ({ minuti: m })),
     indice: 0,
     finito: false,
-    fineFase: ora + minuti[0] * 60000,
-    fine: ora + minuti.reduce((a, b) => a + b, 0) * 60000,
+    fineFase: ora + fasiMinuti[0] * 60000,
+    fine: ora + totale * 60000,
+    minDialogo: Math.min(MIN_DIALOGO, fasiMinuti[FASE_DIALOGO]),
     tempoIntervento: 0,
   };
 }
@@ -35,7 +60,7 @@ export function avanti(st, ora) {
   if (indice <= FASE_DIALOGO) {
     const restantiMs = st.fine - ora;
     const altriMs = fasi.reduce((somma, f, k) => (k >= indice && k !== FASE_DIALOGO ? somma + f.minuti * 60000 : somma), 0);
-    fasi[FASE_DIALOGO].minuti = Math.max(MIN_DIALOGO, (restantiMs - altriMs) / 60000);
+    fasi[FASE_DIALOGO].minuti = Math.max(st.minDialogo ?? MIN_DIALOGO, (restantiMs - altriMs) / 60000);
     fine = ora + fasi.slice(indice).reduce((somma, f) => somma + f.minuti * 60000, 0);
   } else {
     fine = ora + fasi[indice].minuti * 60000;
@@ -70,7 +95,7 @@ export function regolaFase(st, deltaMin) {
   fasi[i].minuti = nuovo;
   let variazioneTotale = effettivo;
   if (i < FASE_DIALOGO) {
-    const dialogo = Math.max(MIN_DIALOGO, fasi[FASE_DIALOGO].minuti - effettivo);
+    const dialogo = Math.max(st.minDialogo ?? MIN_DIALOGO, fasi[FASE_DIALOGO].minuti - effettivo);
     variazioneTotale = effettivo - (fasi[FASE_DIALOGO].minuti - dialogo);
     fasi[FASE_DIALOGO].minuti = dialogo;
   }
@@ -183,4 +208,18 @@ export function testoScheda(s) {
   ];
   VOCI_AUTOVALUTAZIONE.forEach((voce, i) => righe.push(voce + ': ' + (s.voti[i] ? s.voti[i] + '/5' : 'non indicato')));
   return righe.join('\n');
+}
+
+// ---- Ripresa dell'incontro ----
+
+const OTTO_ORE = 8 * 60 * 60 * 1000;
+
+// Controlla che un incontro salvato sul telefono si possa riprendere: struttura corretta, non concluso, non troppo vecchio.
+export function incontroSalvatoValido(dati, adesso) {
+  if (!dati || typeof dati.ts !== 'number' || adesso - dati.ts > OTTO_ORE) return false;
+  const inc = dati.incontro;
+  return !!inc && !inc.finito && Array.isArray(inc.fasi) && inc.fasi.length === PESI_FASI.length
+    && Number.isInteger(inc.indice) && inc.indice >= 0 && inc.indice < PESI_FASI.length
+    && Number.isFinite(inc.fine) && Number.isFinite(inc.fineFase)
+    && inc.fasi.every((f) => f && Number.isFinite(f.minuti) && f.minuti >= 1);
 }
