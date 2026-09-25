@@ -1,6 +1,6 @@
 // Service worker di Dialogo: salva i file sul telefono così la app funziona senza connessione.
 // Quando cambi un file dell'app, cambia anche il numero di versione qui sotto.
-const CACHE = 'dialogo-v5';
+const CACHE = 'dialogo-v6';
 const FILE = [
   './', 'index.html', 'manifest.json', 'css/stile.css',
   'js/app.js', 'js/logic.js', 'js/content.js', 'js/ui.js',
@@ -8,7 +8,7 @@ const FILE = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILE.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

@@ -1,45 +1,62 @@
 // Logica pura di Dialogo: nessun accesso al browser, così si può provare con Node.
 
-export const DURATE = {
-  60: [8, 5, 11, 27, 9],
-  90: [12, 8, 16, 41, 13],
-  120: [16, 11, 22, 55, 16],
+// Due tipi di incontro: il dialogo filosofico e «Pensare la cura». Hanno 5 fasi ciascuno,
+// con la stessa forma: la fase 3 (indice 2) è il giro in cui ognuno parla a turno,
+// la fase 4 (indice 3) è quella che assorbe il tempo risparmiato o perso.
+export const TIPI_INCONTRO = ['filosofico', 'cura'];
+export const tipoValido = (t) => (TIPI_INCONTRO.includes(t) ? t : 'filosofico');
+
+export const DURATE_PER_TIPO = {
+  filosofico: { 60: [8, 5, 11, 27, 9], 90: [12, 8, 16, 41, 13], 120: [16, 11, 22, 55, 16] },
+  cura: { 60: [6, 3, 24, 21, 6], 90: [9, 5, 36, 31, 9], 120: [12, 6, 48, 42, 12] },
 };
+export const DURATE = DURATE_PER_TIPO.filosofico;
 export const DURATA_MIN = 30;
 export const DURATA_MAX = 240;
-const PESI_FASI = [15, 10, 20, 50, 15]; // le proporzioni del kit (110 minuti in tutto)
-export const TEMPO_INTERVENTO = { piccolo: 90, medio: 60, grande: 30 };
+const PESI_PER_TIPO = {
+  filosofico: [15, 10, 20, 50, 15], // le proporzioni del kit (110 minuti in tutto)
+  cura: [10, 5, 40, 35, 10],        // più tempo ai racconti e alla riflessione
+};
+export const TEMPO_INTERVENTO_PER_TIPO = {
+  filosofico: { piccolo: 90, medio: 60, grande: 30 },
+  cura: { piccolo: 240, medio: 150, grande: 90 }, // un racconto chiede più tempo di una prima reazione
+};
+export const TEMPO_INTERVENTO = TEMPO_INTERVENTO_PER_TIPO.filosofico;
 export const FASE_GIRO = 2;
 export const FASE_DIALOGO = 3;
 export const MIN_DIALOGO = 10;
+const NUMERO_FASI = 5;
 
 // Minuti di ciascuna fase per una durata qualsiasi tra DURATA_MIN e DURATA_MAX.
-// Per 60, 90 e 120 minuti si usa la tabella; per le altre durate si rispettano le proporzioni del kit
-// e il dialogo aperto prende il resto, così la somma è sempre esatta.
-export function minutiFasi(totale) {
-  if (DURATE[totale]) return [...DURATE[totale]];
-  const somma = PESI_FASI.reduce((a, b) => a + b, 0);
-  const fasi = PESI_FASI.map((p) => Math.max(1, Math.round((totale * p) / somma)));
+// Per 60, 90 e 120 minuti si usa la tabella del tipo; per le altre durate si rispettano le proporzioni
+// e la fase 4 prende il resto, così la somma è sempre esatta.
+export function minutiFasi(totale, tipo = 'filosofico') {
+  const t = tipoValido(tipo);
+  if (DURATE_PER_TIPO[t][totale]) return [...DURATE_PER_TIPO[t][totale]];
+  const pesi = PESI_PER_TIPO[t];
+  const somma = pesi.reduce((a, b) => a + b, 0);
+  const fasi = pesi.map((p) => Math.max(1, Math.round((totale * p) / somma)));
   const altri = fasi.reduce((a, m, i) => (i === FASE_DIALOGO ? a : a + m), 0);
   fasi[FASE_DIALOGO] = totale - altri;
   return fasi;
 }
 
 // Crea un incontro. Con «minuti» (5 numeri) le fasi sono quelle indicate; altrimenti si calcolano da «durata».
-export function creaIncontro({ durata, gruppo, luogo, domanda, ora, minuti }) {
+export function creaIncontro({ tipo = 'filosofico', durata, gruppo, luogo, domanda, ora, minuti }) {
+  if (!TIPI_INCONTRO.includes(tipo)) throw new Error('Tipo non valido: ' + tipo);
   let fasiMinuti = minuti;
   if (fasiMinuti) {
-    if (!Array.isArray(fasiMinuti) || fasiMinuti.length !== PESI_FASI.length || !fasiMinuti.every((m) => Number.isFinite(m) && m >= 1)) {
+    if (!Array.isArray(fasiMinuti) || fasiMinuti.length !== NUMERO_FASI || !fasiMinuti.every((m) => Number.isFinite(m) && m >= 1)) {
       throw new Error('Fasi non valide: servono 5 numeri di minuti, ciascuno di almeno 1');
     }
   } else {
     if (!Number.isInteger(durata) || durata < DURATA_MIN || durata > DURATA_MAX) throw new Error('Durata non valida: ' + durata);
-    fasiMinuti = minutiFasi(durata);
+    fasiMinuti = minutiFasi(durata, tipo);
   }
   if (!TEMPO_INTERVENTO[gruppo]) throw new Error('Gruppo non valido: ' + gruppo);
   const totale = fasiMinuti.reduce((a, b) => a + b, 0);
   return {
-    durata: totale, gruppo, luogo, domanda,
+    tipo, durata: totale, gruppo, luogo, domanda,
     fasi: fasiMinuti.map((m) => ({ minuti: m })),
     indice: 0,
     finito: false,
@@ -71,7 +88,7 @@ export function avanti(st, ora) {
     indice,
     fineFase: ora + fasi[indice].minuti * 60000,
     fine,
-    tempoIntervento: indice === FASE_GIRO ? TEMPO_INTERVENTO[st.gruppo] : 0,
+    tempoIntervento: indice === FASE_GIRO ? TEMPO_INTERVENTO_PER_TIPO[tipoValido(st.tipo)][st.gruppo] : 0,
   };
 }
 
@@ -184,6 +201,15 @@ export const VOCI_AUTOVALUTAZIONE = [
   'Il gruppo si è sentito a proprio agio',
 ];
 
+// Voci della scheda per «Pensare la cura» (docs/testi-2.0.md, sezione G).
+export const VOCI_AUTOVALUTAZIONE_CURA = [
+  'Ho lasciato parlare tutti i partecipanti',
+  'Ho chiesto episodi concreti, non opinioni',
+  'Ho ascoltato senza dare consigli né giudicare',
+  'Ho tenuto il discorso sul lavoro',
+  'Il gruppo si è sentito a proprio agio',
+];
+
 // Compone il testo da copiare o condividere. Non salva niente.
 export function testoScheda(s) {
   const v = (x, vuoto) => (x && String(x).trim() ? String(x).trim() : vuoto);
@@ -206,7 +232,7 @@ export function testoScheda(s) {
     '',
     'Autovalutazione (da 1 = poco a 5 = molto)',
   ];
-  VOCI_AUTOVALUTAZIONE.forEach((voce, i) => righe.push(voce + ': ' + (s.voti[i] ? s.voti[i] + '/5' : 'non indicato')));
+  (s.voci || VOCI_AUTOVALUTAZIONE).forEach((voce, i) => righe.push(voce + ': ' + (s.voti[i] ? s.voti[i] + '/5' : 'non indicato')));
   return righe.join('\n');
 }
 
@@ -218,8 +244,9 @@ const OTTO_ORE = 8 * 60 * 60 * 1000;
 export function incontroSalvatoValido(dati, adesso) {
   if (!dati || typeof dati.ts !== 'number' || adesso - dati.ts > OTTO_ORE) return false;
   const inc = dati.incontro;
-  return !!inc && !inc.finito && Array.isArray(inc.fasi) && inc.fasi.length === PESI_FASI.length
-    && Number.isInteger(inc.indice) && inc.indice >= 0 && inc.indice < PESI_FASI.length
+  return !!inc && !inc.finito && (inc.tipo === undefined || TIPI_INCONTRO.includes(inc.tipo))
+    && Array.isArray(inc.fasi) && inc.fasi.length === NUMERO_FASI
+    && Number.isInteger(inc.indice) && inc.indice >= 0 && inc.indice < NUMERO_FASI
     && Number.isFinite(inc.fine) && Number.isFinite(inc.fineFase)
     && inc.fasi.every((f) => f && Number.isFinite(f.minuti) && f.minuti >= 1);
 }

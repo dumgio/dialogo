@@ -53,6 +53,7 @@ input[type=text],input[type=search]{min-height:48px;}
 .scheda h1{font-size:1.5rem;margin-bottom:10px;}
 .cosa{font-size:1.2rem;line-height:1.5;}
 .dici{margin-top:14px;padding:12px 14px;background:var(--salvia);border-radius:12px;color:var(--salvia-scura);font-weight:600;}
+.attenzione{margin-top:10px;font-size:.95rem;color:var(--tenue);}
 .domanda-box{background:var(--sabbia);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-family:var(--titoli);font-size:1.05rem;}
 .domanda-box small{display:block;font-family:var(--corpo);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tenue);}
 .avanza{margin:6px 0 96px;}

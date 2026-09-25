@@ -1,13 +1,16 @@
 // Contenuti di Dialogo. Fonte: kit «Caffè Filosofico Fai-da-Te» di Formebrevi APS (CC BY-NC-SA 4.0).
 // I testi delle fasi e dei rilanci vanno riletti da Giovanni prima della pubblicazione.
 
+import { VOCI_AUTOVALUTAZIONE, VOCI_AUTOVALUTAZIONE_CURA } from './logic.js';
+
 export const FASI = [
   {
     id: 'benvenuto',
     titolo: 'Benvenuto e clima di ascolto',
-    cosa: "Accogli i partecipanti in cerchio. Di' che non esistono risposte giuste o sbagliate e che tutti hanno diritto di parola. Proponi un minuto di silenzio per entrare nel clima.",
-    online: "Accogli i partecipanti in videochiamata e chiedi di spegnere le notifiche. Di' che non esistono risposte giuste o sbagliate e che tutti hanno diritto di parola. Proponi un minuto di silenzio per entrare nel clima.",
-    dici: 'Qui non esistono risposte giuste o sbagliate. Ognuno ha diritto di parola.',
+    cosa: "Accogli i partecipanti in cerchio. Di' che non esistono risposte giuste o sbagliate e che tutti hanno diritto di parola. Poi di' due regole: nessuno è obbligato a parlare, si può sempre dire «passo»; quello che si dice resta nel gruppo. Proponi un minuto di silenzio per entrare nel clima.",
+    online: "Accogli i partecipanti in videochiamata e chiedi di spegnere le notifiche. Di' che non esistono risposte giuste o sbagliate e che tutti hanno diritto di parola. Poi di' due regole: nessuno è obbligato a parlare, si può sempre dire «passo»; quello che si dice resta nel gruppo. Proponi un minuto di silenzio per entrare nel clima.",
+    dici: 'Qui non esistono risposte giuste o sbagliate. Ognuno ha diritto di parola, e si può sempre dire «passo».',
+    attenzione: 'Le regole valgono anche per te: se qualcuno dice «passo», ringrazia e vai avanti, senza chiedere perché.',
   },
   {
     id: 'domanda',
@@ -15,6 +18,7 @@ export const FASI = [
     cosa: 'Leggi ad alta voce la domanda-stimolo. Lascia a ciascuno il tempo di scriverla su un foglio e di annotare un primo pensiero. Ancora non si discute: è un momento personale e silenzioso.',
     online: 'Scrivi la domanda in chat e leggila ad alta voce. Lascia a ciascuno il tempo di annotare un primo pensiero su un foglio. Ancora non si discute: è un momento personale e silenzioso.',
     dici: 'Ecco la domanda. Scrivi un primo pensiero, senza condividerlo per ora.',
+    attenzione: 'Non spiegare la domanda e non dire che cosa ne pensi: daresti già una risposta al gruppo.',
   },
   {
     id: 'giro',
@@ -22,6 +26,7 @@ export const FASI = [
     cosa: 'Ognuno condivide, in una o due frasi, la prima reazione alla domanda. Tu non commenti e non valuti: ringrazi e passi la parola.',
     online: 'Ognuno condivide, in una o due frasi, la prima reazione alla domanda. Stabilisci l\'ordine dei turni e passa la parola per nome. Tu non commenti e non valuti.',
     dici: 'Grazie. A chi tocca?',
+    attenzione: 'Nessun commento, nemmeno «bello!»: anche un complimento spinge il gruppo verso una risposta.',
   },
   {
     id: 'dialogo',
@@ -29,6 +34,7 @@ export const FASI = [
     cosa: 'Si apre la discussione. Intervieni per riformulare, stimolare collegamenti, rallentare chi parla di più e dare spazio a chi tace.',
     online: 'Si apre la discussione. Chiedi di alzare la mano o di scrivere «prenoto» in chat. Intervieni per riformulare, stimolare collegamenti e dare spazio a chi tace.',
     dici: 'Qualcuno vuole rispondere a quanto è stato detto?',
+    attenzione: 'Il dialogo è del gruppo, non tuo: fai domande più che dare risposte, e aiuta le persone a parlare tra loro.',
   },
   {
     id: 'chiusura',
@@ -36,6 +42,51 @@ export const FASI = [
     cosa: 'Ognuno condivide una parola o una frase su ciò che porta a casa. Tu non tiri conclusioni: il pensiero resta aperto.',
     online: 'Ognuno condivide una parola o una frase su ciò che porta a casa. Tu non tiri conclusioni: il pensiero resta aperto.',
     dici: 'Una parola o una frase: che cosa portate a casa?',
+    attenzione: 'Resisti alla voglia di riassumere: il pensiero resta aperto, e va bene così.',
+  },
+];
+
+// Fasi di «Pensare la cura»: stessa forma delle fasi del dialogo filosofico (testi approvati da Giovanni, docs/testi-2.0.md, sezione D).
+export const FASI_CURA = [
+  {
+    id: 'benvenuto',
+    titolo: 'Benvenuto e regole',
+    cosa: "Accogli i partecipanti in cerchio. Spiega in poche parole che cosa farete: partire da episodi del vostro lavoro e pensarci insieme. Poi di' le regole: nessuno è obbligato a parlare, si può sempre dire «passo»; quello che si dice resta nel gruppo; si parla del lavoro, non della vita privata.",
+    online: "Accogli i partecipanti in videochiamata e chiedi di spegnere le notifiche. Spiega in poche parole che cosa farete: partire da episodi del vostro lavoro e pensarci insieme. Poi di' le regole: nessuno è obbligato a parlare, si può sempre dire «passo»; quello che si dice resta nel gruppo; si parla del lavoro, non della vita privata.",
+    dici: 'Oggi partiamo dal nostro lavoro. Si può sempre dire «passo», e quello che diciamo resta qui.',
+    attenzione: 'Le regole valgono anche per te: se qualcuno dice «passo», ringrazia e vai avanti, senza chiedere perché.',
+  },
+  {
+    id: 'tema',
+    titolo: 'Scelta del tema',
+    cosa: 'Leggi ad alta voce la domanda scelta. Poi lascia un minuto di silenzio: ognuno cerca nella memoria un episodio del proprio lavoro che la domanda gli fa tornare in mente.',
+    online: 'Scrivi la domanda in chat e leggila ad alta voce. Poi lascia un minuto di silenzio: ognuno cerca nella memoria un episodio del proprio lavoro che la domanda gli fa tornare in mente.',
+    dici: 'Pensate a un episodio preciso del vostro lavoro. Non serve che sia importante: basta che sia vero.',
+    attenzione: "Chiedi un fatto, non un'opinione: un luogo, un momento, un gesto. Il pensiero parte meglio dal concreto.",
+  },
+  {
+    id: 'racconto',
+    titolo: 'Giro di racconto',
+    cosa: 'A turno, chi vuole racconta il suo episodio in pochi minuti. Gli altri ascoltano senza interrompere e senza dare consigli. Tu ringrazi e passi la parola.',
+    online: "Stabilisci l'ordine dei turni e passa la parola per nome. Chi vuole racconta il suo episodio in pochi minuti; gli altri ascoltano senza interrompere e senza dare consigli.",
+    dici: 'Grazie. Chi vuole raccontare adesso?',
+    attenzione: 'Ascoltare è già una forma di cura. Se un racconto scivola verso la vita privata, ringrazia e riporta con garbo al lavoro.',
+  },
+  {
+    id: 'riflessione',
+    titolo: 'Riflessione insieme',
+    cosa: 'Dai singoli racconti si passa a quello che hanno in comune. Aiuta il gruppo a cercare somiglianze e differenze, e a chiedersi che cosa dicono questi episodi sulla cura.',
+    online: 'Chiedi di alzare la mano o di scrivere «prenoto» in chat. Aiuta il gruppo a cercare somiglianze e differenze tra i racconti, e a chiedersi che cosa dicono sulla cura.',
+    dici: 'Che cosa hanno in comune le storie che abbiamo sentito?',
+    attenzione: "Si pensa insieme, non si giudica il lavoro degli altri. Se qualcuno comincia con «avresti dovuto…», riporta la domanda su che cosa l'episodio ci insegna.",
+  },
+  {
+    id: 'chiusura',
+    titolo: 'Chiusura',
+    cosa: "Ognuno dice in una frase che cosa porta via dall'incontro per il suo lavoro. Tu non tiri conclusioni e ringrazi tutti.",
+    online: "Ognuno dice in una frase che cosa porta via dall'incontro per il suo lavoro. Tu non tiri conclusioni e ringrazi tutti.",
+    dici: 'In una frase: che cosa portate via per il vostro lavoro?',
+    attenzione: "Anche qui si può dire «passo». Chiudi all'ora prevista: rispettare il tempo fa parte della cura del gruppo.",
   },
 ];
 
@@ -185,6 +236,63 @@ export const DOMANDE = [
   { id: 135, tema: 'Potere', pubblico: 'adulti', testo: "Il potere cambia le persone?" },
   { id: 136, tema: 'Potere', pubblico: 'adulti', testo: "Si può esercitare il potere senza imporsi?" },
   { id: 137, tema: 'Potere', pubblico: 'tutti', testo: "Che cosa dà autorità a una persona?" },
+  { id: 138, tema: 'Cura', pubblico: 'tutti', testo: 'Si può avere cura di qualcuno senza volergli bene?' },
+  { id: 139, tema: 'Cura', pubblico: 'adulti', testo: 'Chi ha più bisogno di cura: chi la chiede o chi non la chiede?' },
+  { id: 140, tema: 'Cura', pubblico: 'adulti', testo: 'Se nessuno si accorge della cura che diamo, ha comunque valore?' },
+  { id: 141, tema: 'Cura', pubblico: 'adulti', testo: 'Prendersi cura di qualcuno vuol dire decidere per lui?' },
+  { id: 142, tema: 'Cura', pubblico: 'tutti', testo: 'È più facile dare cura o riceverla?' },
+  { id: 143, tema: 'Cura', pubblico: 'scuola', testo: 'Ci si può prendere cura di un luogo, come una classe o un parco?' },
+  { id: 144, tema: 'Cura', pubblico: 'adulti', testo: 'Una società si giudica da come tratta chi ha bisogno di cura?' },
+];
+
+// Temi e domande di «Pensare la cura» (docs/testi-2.0.md, sezione E). Ogni domanda chiede un episodio di lavoro.
+export const TEMI_CURA = [
+  'Il senso di ciò che faccio',
+  "L'attenzione",
+  'La responsabilità e il limite',
+  'La relazione con chi riceve cura',
+  'La fatica',
+  'Aver cura di sé',
+  'Lavorare insieme',
+];
+
+export const DOMANDE_CURA = [
+  { id: 1001, tema: 'Il senso di ciò che faccio', pubblico: 'tutti', testo: 'Qual è stato un momento del tuo lavoro in cui hai sentito che quello che facevi aveva senso?' },
+  { id: 1002, tema: 'Il senso di ciò che faccio', pubblico: 'tutti', testo: "C'è un gesto piccolo del tuo lavoro che per te conta più di quanto sembri?" },
+  { id: 1003, tema: 'Il senso di ciò che faccio', pubblico: 'tutti', testo: "Ricordi un giorno in cui il tuo lavoro ti è sembrato solo un'occupazione? Che cosa l'ha reso così?" },
+  { id: 1004, tema: 'Il senso di ciò che faccio', pubblico: 'tutti', testo: 'Che cosa ti ha fatto scegliere questo lavoro, e che cosa ti fa restare?' },
+  { id: 1005, tema: 'Il senso di ciò che faccio', pubblico: 'tutti', testo: "C'è un episodio in cui hai imparato qualcosa del tuo lavoro che nessuno ti aveva insegnato?" },
+  { id: 1006, tema: "L'attenzione", pubblico: 'tutti', testo: 'Ti è capitato di capire che qualcuno aveva bisogno di qualcosa che non aveva chiesto?' },
+  { id: 1007, tema: "L'attenzione", pubblico: 'tutti', testo: "C'è stata un'occasione in cui uno sguardo o un gesto di pochi secondi ha fatto la differenza?" },
+  { id: 1008, tema: "L'attenzione", pubblico: 'tutti', testo: "C'è stata una volta in cui la fretta ti ha fatto perdere di vista qualcosa di importante?" },
+  { id: 1009, tema: "L'attenzione", pubblico: 'tutti', testo: 'Che cosa ti aiuta, nel lavoro, a notare quello che agli altri sfugge?' },
+  { id: 1010, tema: "L'attenzione", pubblico: 'tutti', testo: 'Ricordi una volta in cui qualcuno è stato attento a te mentre lavoravi? Che effetto ti ha fatto?' },
+  { id: 1011, tema: 'La responsabilità e il limite', pubblico: 'tutti', testo: "C'è stata una volta in cui hai capito che qualcosa non toccava a te?" },
+  { id: 1012, tema: 'La responsabilità e il limite', pubblico: 'tutti', testo: "C'è stata una decisione di lavoro che hai dovuto prendere senza poterti confrontare con nessuno?" },
+  { id: 1013, tema: 'La responsabilità e il limite', pubblico: 'tutti', testo: 'Ti è capitato di fare tutto il possibile e di vedere che il risultato non dipendeva da te?' },
+  { id: 1014, tema: 'La responsabilità e il limite', pubblico: 'tutti', testo: 'Come capisci, nel tuo lavoro, fin dove arriva il tuo compito?' },
+  { id: 1015, tema: 'La responsabilità e il limite', pubblico: 'tutti', testo: "C'è stata una volta in cui dire «no» è stato il modo migliore di prendersi cura?" },
+  { id: 1016, tema: 'La responsabilità e il limite', pubblico: 'tutti', testo: 'Quando è stato giusto, nel tuo lavoro, chiedere aiuto a un collega?' },
+  { id: 1017, tema: 'La relazione con chi riceve cura', pubblico: 'tutti', testo: 'Che cosa ti ha insegnato una persona che hai seguito nel tuo lavoro?' },
+  { id: 1018, tema: 'La relazione con chi riceve cura', pubblico: 'tutti', testo: 'Come capisci se la cura che dai arriva davvero?' },
+  { id: 1019, tema: 'La relazione con chi riceve cura', pubblico: 'tutti', testo: "C'è un «grazie» inatteso che ricordi, detto a parole o con un gesto?" },
+  { id: 1020, tema: 'La relazione con chi riceve cura', pubblico: 'tutti', testo: "C'è stata una volta in cui volevi aiutare e l'altra persona non voleva il tuo aiuto?" },
+  { id: 1021, tema: 'La relazione con chi riceve cura', pubblico: 'tutti', testo: 'Che cosa vuol dire, nel tuo lavoro, stare vicino a qualcuno senza invadere il suo spazio?' },
+  { id: 1022, tema: 'La fatica', pubblico: 'tutti', testo: 'Qual è la parte più faticosa del tuo lavoro, e perché?' },
+  { id: 1023, tema: 'La fatica', pubblico: 'tutti', testo: "C'è stato un momento in cui un collega ti ha alleggerito la giornata?" },
+  { id: 1024, tema: 'La fatica', pubblico: 'tutti', testo: 'Nella tua esperienza, pesa di più la fatica del lavoro o il fatto che nessuno la veda?' },
+  { id: 1025, tema: 'La fatica', pubblico: 'tutti', testo: "C'è stata una giornata di lavoro difficile che alla fine ti ha lasciato qualcosa di buono?" },
+  { id: 1026, tema: 'La fatica', pubblico: 'tutti', testo: 'Quali piccole abitudini ti aiutano a reggere le giornate più lunghe?' },
+  { id: 1027, tema: 'Aver cura di sé', pubblico: 'tutti', testo: 'Che cosa vuol dire, nel tuo lavoro, avere rispetto per sé?' },
+  { id: 1028, tema: 'Aver cura di sé', pubblico: 'tutti', testo: "C'è stata una volta in cui prenderti una pausa ti ha fatto lavorare meglio?" },
+  { id: 1029, tema: 'Aver cura di sé', pubblico: 'tutti', testo: 'Dove trovi, nella tua giornata di lavoro, un momento per pensare a quello che fai?' },
+  { id: 1030, tema: 'Aver cura di sé', pubblico: 'tutti', testo: 'Per accorgerti dei bisogni degli altri, di che cosa hai bisogno tu?' },
+  { id: 1031, tema: 'Aver cura di sé', pubblico: 'tutti', testo: 'Che cosa ti ha insegnato il tuo lavoro sul prenderti cura di te?' },
+  { id: 1032, tema: 'Lavorare insieme', pubblico: 'tutti', testo: "C'è un problema di lavoro che avete risolto meglio in gruppo che ciascuno per conto suo?" },
+  { id: 1033, tema: 'Lavorare insieme', pubblico: 'tutti', testo: 'Che cosa hai imparato da un collega, senza che fosse una lezione?' },
+  { id: 1034, tema: 'Lavorare insieme', pubblico: 'tutti', testo: 'Nel tuo gruppo di lavoro, quando vi siete sentiti davvero una squadra?' },
+  { id: 1035, tema: 'Lavorare insieme', pubblico: 'tutti', testo: "C'è stata una volta in cui l'idea di un collega ti ha fatto cambiare modo di lavorare?" },
+  { id: 1036, tema: 'Lavorare insieme', pubblico: 'tutti', testo: 'Nella tua esperienza, che cosa aiuta un gruppo di lavoro a prendersi cura delle persone che ne fanno parte?' },
 ];
 
 export const RILANCI = [
@@ -255,9 +363,91 @@ export const RILANCI = [
   },
 ];
 
+// Rilanci di «Pensare la cura»: stesse situazioni, frasi di ascolto (docs/testi-2.0.md, sezione F).
+export const RILANCI_CURA = [
+  {
+    id: 'bloccato',
+    titolo: 'Il dialogo si è bloccato',
+    frasi: [
+      'Qualcuno ha vissuto qualcosa di simile?',
+      'Che cosa vi ha colpito nei racconti che abbiamo sentito?',
+      'Se doveste dare un nome a quello che accomuna queste storie, quale sarebbe?',
+    ],
+    consiglio: 'Aspetta qualche secondo prima di intervenire. Se il gruppo resta fermo, torna a un racconto e chiedi un dettaglio.',
+  },
+  {
+    id: 'troppo',
+    titolo: 'Qualcuno parla troppo',
+    frasi: [
+      'Grazie, teniamo questa storia. Sentiamo anche gli altri.',
+      'Qual è il punto che vuoi lasciarci, in una frase?',
+    ],
+    consiglio: 'Non è scortesia: è tutela del gruppo. Guarda nello strumento Turni chi non ha ancora parlato.',
+  },
+  {
+    id: 'poco-chiaro',
+    titolo: 'Qualcuno è stato poco chiaro',
+    frasi: [
+      'Puoi fare un esempio?',
+      'Che cosa è successo, esattamente?',
+    ],
+    consiglio: 'Chiedi fatti, non spiegazioni: un luogo, un momento, un gesto. Non aggiungere cose che la persona non ha detto.',
+  },
+  {
+    id: 'accordo',
+    titolo: "Sono tutti d'accordo",
+    frasi: [
+      'Qualcuno ha vissuto una situazione simile in modo diverso?',
+      "C'è un caso in cui questo non vale?",
+    ],
+    consiglio: 'Un accordo troppo rapido può nascondere esperienze diverse. Dai valore a chi la vede in un altro modo.',
+  },
+  {
+    id: 'fuori-tema',
+    titolo: 'Si va fuori tema',
+    frasi: [
+      'Come si collega al nostro tema?',
+      'Teniamo questo pensiero da parte e torniamo al lavoro.',
+    ],
+    consiglio: 'Prima riconosci quello che è stato detto, poi riporta il gruppo alla domanda. Se il discorso scivola sulla vita privata, ringrazia e torna al lavoro.',
+  },
+  {
+    id: 'tono',
+    titolo: 'Il tono si scalda',
+    frasi: [
+      'Fermiamoci un momento. Respiriamo e ascoltiamo.',
+      'Qui non giudichiamo il lavoro dei colleghi: cerchiamo di capire.',
+    ],
+    consiglio: 'Rallenta tu: parla piano e proponi 20 secondi di silenzio. Si discutono le situazioni, mai le persone.',
+  },
+  {
+    id: 'silenzio',
+    titolo: "C'è un lungo silenzio",
+    frasi: [
+      'Prendiamoci ancora qualche secondo.',
+      'Nessuna fretta: a volte un ricordo ha bisogno di tempo.',
+    ],
+    consiglio: 'Un silenzio di 20 secondi è pensiero in corso: aspetta a riempirlo. Puoi avviare il timer nello strumento Tempo.',
+  },
+];
+
+// I due tipi di incontro e i loro contenuti.
+export const TIPI = {
+  filosofico: {
+    nome: 'Dialogo filosofico',
+    descrizione: 'Per qualsiasi gruppo: si ragiona insieme su una domanda.',
+    fasi: FASI, temi: TEMI, domande: DOMANDE, rilanci: RILANCI, voci: VOCI_AUTOVALUTAZIONE,
+  },
+  cura: {
+    nome: 'Pensare la cura',
+    descrizione: 'Per chi si prende cura degli altri per lavoro o per impegno: si riflette sul proprio lavoro a partire da episodi concreti.',
+    fasi: FASI_CURA, temi: TEMI_CURA, domande: DOMANDE_CURA, rilanci: RILANCI_CURA, voci: VOCI_AUTOVALUTAZIONE_CURA,
+  },
+};
+
 // ---- Contatti e collegamenti ----
 
-export const VERSIONE = '1.2 · settembre 2026';
+export const VERSIONE = '2.0 · settembre 2026';
 
 export const CONTATTI = {
   sito: 'https://www.formebrevi.it',
@@ -293,10 +483,10 @@ export const PAGINE = [
     sotto: 'Guida completa: preparare, condurre, strumenti, tempo, installazione.',
     blocchi: [
       { t: 'h', x: 'In breve' },
-      { t: 'p', x: `Dialogo è la app di Formebrevi APS per chi conduce un dialogo filosofico di gruppo, in presenza o online. Ti accompagna nelle cinque fasi dell'incontro, tiene il tempo e ti dà sotto mano quattro strumenti per i momenti difficili. I partecipanti non devono installare niente: la usa solo chi conduce.` },
+      { t: 'p', x: `Dialogo è la app di Formebrevi APS per chi conduce un incontro di gruppo, in presenza o online. Puoi scegliere tra due tipi di incontro: il **dialogo filosofico**, per qualsiasi gruppo, e **«Pensare la cura»**, per chi si prende cura degli altri per lavoro o per impegno. Ti accompagna nelle cinque fasi dell'incontro, tiene il tempo e ti dà sotto mano quattro strumenti per i momenti difficili. I partecipanti non devono installare niente: la usa solo chi conduce.` },
       { t: 'h', x: 'Come si usa, in cinque passi' },
       { t: 'passi', x: [
-        { titolo: `Prepara l'incontro.`, testo: 'Scegli la durata, il gruppo, il luogo e la domanda.' },
+        { titolo: `Prepara l'incontro.`, testo: `Scegli il tipo di incontro, la durata, il gruppo, il luogo e la domanda.` },
         { titolo: `Apri l'incontro.`, testo: `Tocca «Inizia l'incontro»: parte la prima fase e il tempo comincia a scorrere.` },
         { titolo: 'Segui le fasi.', testo: `In ogni fase leggi cosa fare e cosa puoi dire. Quando sei pronto, tocca «Avanti».` },
         { titolo: 'Usa gli strumenti quando servono.', testo: 'Dalla barra in basso: Domanda, Turni, Rilancia e Tempo.' },
@@ -313,12 +503,12 @@ export const PAGINE = [
         `Le scelte di durata, gruppo, luogo, pubblico e suono restano sul telefono: la volta dopo le trovi già impostate.`,
       ] },
       { t: 'h', x: 'Le durate delle fasi' },
-      { t: 'p', x: `Le fasi seguono il kit «Caffè Filosofico Fai-da-Te». Ecco quanti minuti ha ciascuna, in base alla durata scelta:` },
+      { t: 'p', x: `Le fasi del dialogo filosofico seguono il kit «Caffè Filosofico Fai-da-Te». Ecco quanti minuti ha ciascuna, in base alla durata scelta. I tempi di «Pensare la cura» sono nella sua pagina, in Informazioni.` },
       { t: 'durate' },
       { t: 'h', x: 'Durata su misura' },
       { t: 'lista', x: [
         `Nella preparazione tocca «Su misura».`,
-        `Con **−5** e **+5** scegli la durata totale, da 30 a 240 minuti: le fasi seguono le proporzioni del kit e il dialogo aperto prende il resto.`,
+        `Con **−5** e **+5** scegli la durata totale, da 30 a 240 minuti: le fasi seguono le proporzioni consigliate e la quarta fase prende il resto.`,
         `Con **−** e **+** accanto a ogni fase cambi i minuti di quella fase, uno alla volta (da 1 a 120): la durata totale si aggiorna da sola.`,
         `Se scegli un dialogo aperto più breve di 10 minuti, quello diventa il minimo per quell'incontro.`,
         `Le fasi personalizzate valgono per quell'incontro; la durata totale la ritrovi la volta dopo.`,
@@ -401,6 +591,7 @@ export const PAGINE = [
         `**È davvero gratuita?** Sì. Se ti è utile, puoi sostenere Formebrevi dalla pagina «Sostieni Formebrevi».`,
       ] },
       { t: 'azione', x: 'Serve aiuto? Vai a «Supporto»', az: 'pagina', id: 'supporto', stile: 'chiaro' },
+      { t: 'nota', x: `Dialogo è uno strumento di riflessione di gruppo, non un servizio di sostegno psicologico o terapeutico. Chi conduce resta responsabile dell'incontro.` },
     ],
   },
   {
@@ -436,6 +627,60 @@ export const PAGINE = [
         `Allenare il pensiero critico e la partecipazione.`,
       ] },
       { t: 'link', x: `Scarica il kit «Caffè Filosofico Fai-da-Te»`, href: 'risorse', stile: 'chiaro' },
+    ],
+  },
+  {
+    id: 'pensare-la-cura',
+    gruppo: 'imparare',
+    titolo: 'Pensare la cura',
+    sotto: `Che cos'è, a chi serve, come si svolge e da quali idee nasce.`,
+    blocchi: [
+      { t: 'h', x: `Che cos'è` },
+      { t: 'p', x: `«Pensare la cura» è un incontro di gruppo per chi si prende cura degli altri per lavoro o per impegno: educatori, operatori, volontari, insegnanti. Si parte da episodi concreti del proprio lavoro e si riflette insieme su che cosa dicono della cura.` },
+      { t: 'h', x: `Perché` },
+      { t: 'p', x: `Chi cura ha poco tempo per fermarsi a pensare. Luigina Mortari scrive che il lavoro di cura «è faticoso» e che «chiede molte energie cognitive, emotive» (Filosofia della cura, p. 213). Questo incontro offre un tempo per pensarci insieme, con calma.` },
+      { t: 'h', x: `Che cosa non è` },
+      { t: 'lista', x: [
+        `**Una terapia o un gruppo di sostegno?** No. Prendersi cura e curare sono due cose diverse: in origine, avere cura di qualcuno vuol dire «stare in pensiero», «prendere a cuore» (Umberto Curi, Le parole della cura, pp. 55-56). Qui si riflette sul lavoro.`,
+        `**Una riunione organizzativa?** No. Non si decidono turni né compiti: si pensa.`,
+        `**Una valutazione?** No. Nessuno giudica il lavoro degli altri.`,
+      ] },
+      { t: 'h', x: `Come si svolge` },
+      { t: 'p', x: `Cinque fasi: il benvenuto con le regole, la scelta del tema, il giro di racconto, in cui ognuno porta un episodio del proprio lavoro, la riflessione insieme e la chiusura. Ecco i minuti di ciascuna fase:` },
+      { t: 'durate', tipo: 'cura' },
+      { t: 'h', x: `Le regole` },
+      { t: 'lista', x: [
+        `Nessuno è obbligato a parlare: si può sempre dire «passo».`,
+        `Quello che si dice resta nel gruppo.`,
+        `Si parla del lavoro, non della vita privata.`,
+      ] },
+      { t: 'h', x: `Da quali idee nasce` },
+      { t: 'lista', x: [
+        `**Joan Tronto** descrive la cura in quattro fasi: accorgersi di un bisogno, farsene carico, prestare la cura e vedere come viene ricevuta (Confini morali, cap. IV). Da qui vengono diversi temi delle domande.`,
+        `**Luigina Mortari** mostra che la cura passa dall'attenzione e dall'ascolto (Filosofia della cura, cap. 4) e che anche chi cura ha bisogno di cura (Aver cura di sé).`,
+        `**Paulo Freire** fa partire il pensiero di un gruppo da situazioni concrete della vita dei partecipanti (Pedagogia degli oppressi, p. 98).`,
+        `**Antonio Cosentino** descrive il gruppo che pensa insieme come una «comunità di ricerca» (Philosophy for children, cap. IV).`,
+      ] },
+      { t: 'nota', x: `Dialogo è uno strumento di riflessione di gruppo, non un servizio di sostegno psicologico o terapeutico. Chi conduce resta responsabile dell'incontro.` },
+    ],
+  },
+  {
+    id: 'come-condurre',
+    gruppo: 'imparare',
+    titolo: 'Il ruolo di chi conduce',
+    sotto: `Il ruolo di chi facilita, in poche idee.`,
+    blocchi: [
+      { t: 'h', x: `Il gruppo pensa, tu custodisci` },
+      { t: 'p', x: `Chi conduce non porta le risposte. Antonio Cosentino chiede a chi facilita di lavorare «in stile riflessivo, non-direttivo, non-valutativo» (Philosophy for children, p. 110): fa domande, dà la parola, tiene il filo. Chi pensa è il gruppo.` },
+      { t: 'h', x: `Ascolta` },
+      { t: 'p', x: `«Senza ascolto, infatti, non c'è comprensione», scrive Luigina Mortari (Filosofia della cura, p. 184). Ascoltare vuol dire anche lasciare spazio: a volte il gesto migliore è tacere.` },
+      { t: 'h', x: `Parti dal concreto` },
+      { t: 'p', x: `Una domanda astratta rischia di restare sospesa. Un esempio, un episodio, un fatto aiutano il gruppo a pensare. Paulo Freire lo descrive come un andare «dalle parti al tutto, e un ritorno dal tutto alle parti» (Pedagogia degli oppressi, p. 98).` },
+      { t: 'h', x: `Dai la parola a tutti` },
+      { t: 'p', x: `Per Freire parlare «non è privilegio di alcuni uomini, ma diritto di tutti gli uomini» (Pedagogia degli oppressi, p. 78). Lo strumento Turni ti aiuta a vedere chi non ha ancora parlato.` },
+      { t: 'h', x: `Rispetta il tempo e le regole` },
+      { t: 'p', x: `Comincia e finisci all'ora prevista. Ricorda le regole all'inizio e rispettale anche tu: chi dice «passo» non deve spiegare perché.` },
+      { t: 'nota', x: `Dialogo è uno strumento di riflessione di gruppo, non un servizio di sostegno psicologico o terapeutico. Chi conduce resta responsabile dell'incontro.` },
     ],
   },
   {
@@ -599,6 +844,7 @@ export const PAGINE = [
       { t: 'p', x: 'Dialogo è realizzata da Formebrevi APS.' },
       { t: 'h', x: 'Contenuti e licenza' },
       { t: 'p', x: `Le fasi, le domande del kit e i cinque consigli vengono dal kit «Caffè Filosofico Fai-da-Te» di Formebrevi APS. I contenuti sono distribuiti con licenza Creative Commons BY-NC-SA 4.0: puoi usarli e condividerli per scopi non commerciali, citando la fonte. Le domande aggiuntive, i rilanci e i testi informativi sono stati scritti per questa app.` },
+      { t: 'p', x: `Le fasi, le domande e i testi di «Pensare la cura» sono stati scritti per questa app a partire da: Joan C. Tronto, Confini morali; Luigina Mortari, Filosofia della cura, Aver cura di sé e La pratica dell'aver cura; Paulo Freire, Pedagogia degli oppressi; Antonio Cosentino, Philosophy for children; Umberto Curi, Le parole della cura.` },
       { t: 'h', x: 'Privacy' },
       { t: 'p', x: `Dialogo non ha account, non ha pubblicità e non raccoglie dati. Non invia niente a nessuno. Sul telefono restano solo le impostazioni della preparazione e, durante un incontro, il suo stato senza nomi, che si cancella a fine incontro.` },
       { t: 'h', x: 'Versione' },

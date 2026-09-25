@@ -1,6 +1,6 @@
-import { FASI, DOMANDE, TEMI, RILANCI, PAGINE, CONTATTI } from './content.js';
+import { TIPI, PAGINE, CONTATTI } from './content.js';
 import {
-  DURATE, DURATA_MIN, DURATA_MAX, TEMPO_INTERVENTO, creaIncontro, avanti, regolaFase, secondiFase, secondiTotali,
+  DURATE_PER_TIPO, DURATA_MIN, DURATA_MAX, TEMPO_INTERVENTO, tipoValido, creaIncontro, avanti, regolaFase, secondiFase, secondiTotali,
   formatTempo, parseNomi, creaTurni, registraIntervento, statoPersona, prossimaDomanda, proponiTre,
   domandePerPubblico, testoScheda, minutiFasi, incontroSalvatoValido,
 } from './logic.js';
@@ -16,11 +16,12 @@ const ora = () => t0 + (Date.now() - t0) * scala;
 // ---- Memoria del telefono: solo impostazioni e, durante un incontro, il suo stato (mai i nomi) ----
 const CHIAVE = 'dialogo-impostazioni';
 const CHIAVE_INCONTRO = 'dialogo-incontro';
-const PREDEFINITE = { durata: 90, gruppo: 'medio', luogo: 'presenza', pubblico: 'tutti', suono: false };
+const PREDEFINITE = { tipo: 'filosofico', durata: 90, gruppo: 'medio', luogo: 'presenza', pubblico: 'tutti', suono: false };
 
 function leggiImpostazioni() {
   try {
     const s = { ...PREDEFINITE, ...JSON.parse(localStorage.getItem(CHIAVE) || '{}') };
+    s.tipo = tipoValido(s.tipo);
     const valida = Number.isInteger(s.durata) && s.durata >= DURATA_MIN && s.durata <= DURATA_MAX
       && TEMPO_INTERVENTO[s.gruppo] && ['presenza', 'online'].includes(s.luogo)
       && ['tutti', 'scuola', 'adulti'].includes(s.pubblico) && typeof s.suono === 'boolean';
@@ -29,7 +30,7 @@ function leggiImpostazioni() {
 }
 function salvaImpostazioni(s) {
   try {
-    localStorage.setItem(CHIAVE, JSON.stringify({ durata: s.durata, gruppo: s.gruppo, luogo: s.luogo, pubblico: s.pubblico, suono: !!s.suono }));
+    localStorage.setItem(CHIAVE, JSON.stringify({ tipo: tipoValido(s.tipo), durata: s.durata, gruppo: s.gruppo, luogo: s.luogo, pubblico: s.pubblico, suono: !!s.suono }));
   } catch { /* facoltativo */ }
 }
 
@@ -68,6 +69,8 @@ let intervento = null;        // { fine }
 let avvisata = false;
 let wakeLock = null;
 let pubblico = 'tutti';       // quali domande proporre: tutti, scuola, adulti
+let tipo = 'filosofico';      // tipo di incontro in uso: 'filosofico' o 'cura'
+let tipoElenco = 'filosofico'; // tipo delle domande nell'elenco: la pagina «Tutte le domande» mostra sempre il dialogo filosofico
 let paginaId = null;          // pagina informativa aperta
 let daVista = 'apertura';     // da dove si è arrivati alla pagina, per il tasto «Indietro»
 let scheda = null;            // scheda di riflessione (resta solo in memoria)
@@ -80,8 +83,10 @@ let cerca = '';               // testo cercato nell'elenco delle domande
 let filtroSfoglia = 'tutti';  // filtro «per chi» dell'elenco delle domande
 let overlayVisibile = false;
 
-const pool = () => domandePerPubblico(DOMANDE, pubblico);
-const poolSfoglia = () => domandePerPubblico(DOMANDE, filtroSfoglia);
+const T = () => TIPI[tipo];
+const pool = () => (tipo === 'cura' ? T().domande : domandePerPubblico(T().domande, pubblico));
+const poolSfoglia = () => (tipoElenco === 'cura' ? TIPI.cura.domande : domandePerPubblico(TIPI[tipoElenco].domande, filtroSfoglia));
+const trovaDomanda = (id) => T().domande.find((x) => x.id === Number(id));
 const setTesto = (id, testo) => { const el = document.getElementById(id); if (el && el.textContent !== testo) el.textContent = testo; };
 
 // ---- Avvisi: vibrazione e suono ----
@@ -140,10 +145,11 @@ function mostra(nome, mantieniScroll) {
 
 function apertura() {
   const salvato = leggiIncontroSalvato();
+  const tipoSalvato = salvato ? TIPI[tipoValido(salvato.incontro.tipo)] : null;
   const ripresa = salvato ? `
   <div class="scheda ripresa">
     <p class="cosa">Hai un incontro in corso</p>
-    <p class="nota">Fase ${salvato.incontro.indice + 1} di ${FASI.length} · ${esc(FASI[salvato.incontro.indice].titolo)} · resta ${formatTempo(secondiTotali(salvato.incontro, Date.now()))}</p>
+    <p class="nota">${esc(tipoSalvato.nome)} · Fase ${salvato.incontro.indice + 1} di ${tipoSalvato.fasi.length} · ${esc(tipoSalvato.fasi[salvato.incontro.indice].titolo)} · resta ${formatTempo(secondiTotali(salvato.incontro, Date.now()))}</p>
     <div class="duo">
       <button class="btn primario" data-az="riprendi">Riprendi</button>
       <button class="btn chiaro" data-az="scarta-incontro">Scarta</button>
@@ -152,7 +158,7 @@ function apertura() {
   return `
   <p class="marchio">Formebrevi APS</p>
   <h1 class="titolo">Dialogo</h1>
-  <p class="lead">La app gratuita di Formebrevi APS per chi conduce un dialogo filosofico di gruppo, in presenza o online. Ti guida nelle cinque fasi dell'incontro, tiene il tempo, ti propone domande per ogni argomento e ti dà frasi pronte per i momenti difficili.</p>
+  <p class="lead">La app gratuita di Formebrevi APS per condurre incontri di gruppo, in presenza o online: un dialogo filosofico, per qualsiasi gruppo, oppure «Pensare la cura», per chi si prende cura degli altri per lavoro o per impegno. Ti guida nelle cinque fasi, tiene il tempo, ti propone le domande e ti dà frasi pronte per i momenti difficili.</p>
   ${ripresa}
   <div class="pila">
     <button class="btn primario" data-az="prepara">Prepara un incontro</button>
@@ -166,8 +172,8 @@ function apertura() {
 function elencoSfoglia() {
   return `<div class="velo" data-az="velo-sfoglia"><div class="foglio" role="dialog" aria-modal="true" aria-label="Tutte le domande">
     <div class="foglio-testa"><h2>Tutte le domande</h2><button class="chiudi" data-az="chiudi-sfoglia">Chiudi</button></div>
-    ${controlliDomande(cerca, filtroSfoglia)}
-    <div id="lista-domande" style="margin-top:14px">${accordionDomande({ domande: poolSfoglia(), aperto: temaAperto, cerca, seleziona: true })}</div>
+    ${controlliDomande(cerca, filtroSfoglia, tipoElenco !== 'cura')}
+    <div id="lista-domande" style="margin-top:14px">${accordionDomande({ domande: poolSfoglia(), aperto: temaAperto, cerca, seleziona: true, temi: TIPI[tipoElenco].temi })}</div>
   </div></div>`;
 }
 
@@ -178,11 +184,13 @@ function prepara() {
   return `
   <button class="indietro" data-az="home">← Indietro</button>
   <h1 class="titolo" style="font-size:2rem">Prepara l'incontro</h1>
+  <div class="gruppo"><h2>Che tipo di incontro?</h2>${chips('tipo', [['filosofico', TIPI.filosofico.nome], ['cura', TIPI.cura.nome]], p.tipo)}
+    <p class="nota">${esc(TIPI[p.tipo].descrizione)}</p></div>
   <div class="gruppo"><h2>Quanto dura?</h2>${chips('durata', [[60, '60 minuti'], [90, '90 minuti'], [120, '120 minuti'], ['su-misura', 'Su misura']], p.suMisura ? 'su-misura' : p.durata)}
-    ${p.suMisura ? editorDurata(p) : ''}</div>
+    ${p.suMisura ? editorDurata(p, TIPI[p.tipo].fasi) : ''}</div>
   <div class="gruppo"><h2>Quante persone?</h2>${chips('gruppo', [['piccolo', 'Fino a 8'], ['medio', '9–15'], ['grande', 'Oltre 15']], p.gruppo)}</div>
   <div class="gruppo"><h2>Dove?</h2>${chips('luogo', [['presenza', 'In presenza'], ['online', 'Online']], p.luogo)}</div>
-  <div class="gruppo"><h2>Per chi?</h2>${chips('pubblico', [['tutti', 'Tutti'], ['scuola', 'Scuola'], ['adulti', 'Adulti']], p.pubblico)}</div>
+  ${p.tipo === 'filosofico' ? `<div class="gruppo"><h2>Per chi?</h2>${chips('pubblico', [['tutti', 'Tutti'], ['scuola', 'Scuola'], ['adulti', 'Adulti']], p.pubblico)}</div>` : ''}
   <div class="gruppo"><h2>Con quale domanda?</h2>
     ${opzioni.map((d) => `<button class="opzione" data-az="scegli" data-id="${d.id}" aria-pressed="${!!p.scelta && p.scelta.id === d.id}"><small>${esc(d.tema)}</small>${esc(d.testo)}</button>`).join('')}
     <div class="duo" style="margin:4px 0 8px">
@@ -203,18 +211,19 @@ function sessione() {
   const st = incontro;
   const barra = soloStrumenti
     ? `<div class="barra"><span class="fase">Solo gli strumenti</span></div>`
-    : `<div class="barra"><span class="fase">Fase ${st.indice + 1} di ${FASI.length} · ${esc(FASI[st.indice].titolo)}</span><span class="tempo" id="tFase">--:--</span></div>
+    : `<div class="barra"><span class="fase">Fase ${st.indice + 1} di ${T().fasi.length} · ${esc(T().fasi[st.indice].titolo)}</span><span class="tempo" id="tFase">--:--</span></div>
        <p class="totale">Tempo dell'incontro: <strong id="tTot">--:--</strong></p>`;
   let corpo;
   if (soloStrumenti) {
     corpo = `<div class="scheda"><h1>Gli strumenti sono qui sotto</h1><p class="cosa">Scegli una domanda, segna i turni di parola, cerca una frase per rilanciare o avvia un silenzio.</p></div>`;
   } else {
-    const f = FASI[st.indice];
+    const f = T().fasi[st.indice];
     corpo = `
       <div class="domanda-box"><small>La domanda</small>${esc(domandaCorrente ? domandaCorrente.testo : st.domanda.testo)}</div>
       <div class="scheda"><p class="cosa">${esc(luogo === 'online' ? f.online : f.cosa)}</p>
-      <p class="dici">Puoi dire: «${esc(f.dici)}»</p></div>
-      <div class="avanza"><button class="btn primario" data-az="avanti">${st.indice === FASI.length - 1 ? 'Concludi' : 'Avanti →'}</button></div>`;
+      <p class="dici">Puoi dire: «${esc(f.dici)}»</p>
+      <p class="attenzione">A cosa fare attenzione: ${esc(f.attenzione)}</p></div>
+      <div class="avanza"><button class="btn primario" data-az="avanti">${st.indice === T().fasi.length - 1 ? 'Concludi' : 'Avanti →'}</button></div>`;
   }
   return `${barra}${corpo}
   <nav class="strumenti" aria-label="Strumenti">
@@ -241,8 +250,8 @@ function fine() {
 }
 
 // ---- Informazioni, pagine e scheda ----
-const domandeInPagina = () => controlliDomande(cerca, filtroSfoglia) +
-  `<div id="lista-domande" style="margin-top:14px">${accordionDomande({ domande: poolSfoglia(), aperto: temaAperto, cerca, seleziona: false })}</div>`;
+const domandeInPagina = () => controlliDomande(cerca, filtroSfoglia, tipoElenco !== 'cura') +
+  `<div id="lista-domande" style="margin-top:14px">${accordionDomande({ domande: poolSfoglia(), aperto: temaAperto, cerca, seleziona: false, temi: TIPI[tipoElenco].temi })}</div>`;
 
 function info() {
   const gruppi = [['imparare', 'Per condurre bene'], ['dopo', "Dopo l'incontro"], ['formebrevi', 'Formebrevi']];
@@ -266,7 +275,7 @@ function pagina() {
 
 const nuovaScheda = () => ({
   data: new Date().toLocaleDateString('it-IT'), luogo: '', domanda: ultimaDomanda, partecipanti: '',
-  bene: '', cambiare: '', frase: '', voti: [0, 0, 0, 0, 0],
+  bene: '', cambiare: '', frase: '', voti: [0, 0, 0, 0, 0], voci: TIPI[leggiImpostazioni().tipo].voci, // l'ultimo tipo avviato
 });
 
 function avviso(testo) {
@@ -333,7 +342,9 @@ function pannelloTurni() {
     <textarea id="nomi" placeholder="Anna&#10;Marco&#10;Luca"></textarea>
     <div class="gruppo"><button class="btn primario" data-az="salva-nomi">Salva</button></div>`;
   }
-  const tempi = [[0, 'Spento'], [30, '30 s'], [60, '60 s'], [90, '90 s']];
+  const tempi = tipo === 'cura'
+    ? [[0, 'Spento'], [90, '90 s'], [150, '2 min e mezzo'], [240, '4 min']]
+    : [[0, 'Spento'], [30, '30 s'], [60, '60 s'], [90, '90 s']];
   const tInt = incontro ? incontro.tempoIntervento : (window.__tint || 0);
   return `${testaPannello('Turni')}
   <p class="nota">Tocca il nome di chi prende la parola. In arancione chi non ha ancora parlato, in rosa chi ha parlato molto.</p>
@@ -345,7 +356,7 @@ function pannelloTurni() {
 
 function pannelloRilancia() {
   if (rilancioAperto) {
-    const r = RILANCI.find((x) => x.id === rilancioAperto);
+    const r = T().rilanci.find((x) => x.id === rilancioAperto);
     return `${testaPannello(esc(r.titolo))}
     <button class="indietro" data-az="rilancio-indietro">← Altre situazioni</button>
     ${r.frasi.map((f) => `<p class="frase">«${esc(f)}»</p>`).join('')}
@@ -353,7 +364,7 @@ function pannelloRilancia() {
   }
   return `${testaPannello('Rilancia')}
   <p class="nota">Che cosa sta succedendo?</p>
-  ${RILANCI.map((r) => `<button class="riga" data-az="rilancio" data-id="${r.id}"><span>${esc(r.titolo)}</span><span>›</span></button>`).join('')}`;
+  ${T().rilanci.map((r) => `<button class="riga" data-az="rilancio" data-id="${r.id}"><span>${esc(r.titolo)}</span><span>›</span></button>`).join('')}`;
 }
 
 function pannelloTempo() {
@@ -375,7 +386,7 @@ function pannelloTempo() {
 function aggiornaLista() {
   const lista = document.getElementById('lista-domande');
   if (!lista) return;
-  lista.innerHTML = accordionDomande({ domande: poolSfoglia(), aperto: temaAperto, cerca, seleziona: !!lista.closest('.velo') });
+  lista.innerHTML = accordionDomande({ domande: poolSfoglia(), aperto: temaAperto, cerca, seleziona: !!lista.closest('.velo'), temi: TIPI[tipoElenco].temi });
   const c = document.getElementById('chips-pub');
   if (c) c.innerHTML = chipsPubblico(filtroSfoglia);
 }
@@ -399,7 +410,7 @@ function azzera() {
 function impostaDurataTotale(nuova) {
   if (nuova < DURATA_MIN || nuova > DURATA_MAX) { avviso(`La durata va da ${DURATA_MIN} a ${DURATA_MAX} minuti`); return; }
   prep.durata = nuova;
-  prep.minuti = minutiFasi(nuova);
+  prep.minuti = minutiFasi(nuova, prep.tipo);
 }
 
 const azioni = {
@@ -410,11 +421,11 @@ const azioni = {
     if (vistaCorrente !== 'pagina') daVista = vistaCorrente;
     paginaId = d.id;
     if (d.id === 'scheda' && !scheda) scheda = nuovaScheda();
-    if (d.id === 'domande') { cerca = ''; temaAperto = null; filtroSfoglia = 'tutti'; }
+    if (d.id === 'domande') { cerca = ''; temaAperto = null; filtroSfoglia = 'tutti'; tipoElenco = 'filosofico'; }
     mostra('pagina');
   },
   'pagina-indietro': () => mostra(['info', 'fine'].includes(daVista) ? daVista : 'apertura'),
-  condividi: () => condividi('Dialogo: la app gratuita per condurre un dialogo filosofico di gruppo.', CONTATTI.app),
+  condividi: () => condividi('Dialogo: la app gratuita di Formebrevi per condurre un dialogo filosofico o un incontro «Pensare la cura».', CONTATTI.app),
   voto: (d) => {
     const i = Number(d.i), v = Number(d.v);
     scheda.voti[i] = scheda.voti[i] === v ? 0 : v;
@@ -427,7 +438,7 @@ const azioni = {
     const s = leggiIncontroSalvato();
     if (!s) { mostra('apertura'); return; }
     azzera();
-    incontro = s.incontro; usate = s.usate || []; luogo = s.luogo; gruppo = s.gruppo; pubblico = s.pubblico;
+    incontro = s.incontro; tipo = tipoValido(incontro.tipo); usate = s.usate || []; luogo = s.luogo; gruppo = s.gruppo; pubblico = s.pubblico;
     domandaCorrente = s.domandaCorrente || incontro.domanda; riserva = !!s.riserva; suono = !!s.suono;
     ultimaDomanda = incontro.domanda ? incontro.domanda.testo : '';
     if (suono) preparaAudio();
@@ -438,15 +449,15 @@ const azioni = {
 
   prepara: () => {
     const s = leggiImpostazioni();
-    prep = { ...s, scelta: null, suMisura: !DURATE[s.durata], minuti: DURATE[s.durata] ? null : minutiFasi(s.durata) };
-    pubblico = prep.pubblico;
+    prep = { ...s, scelta: null, suMisura: !DURATE_PER_TIPO[s.tipo][s.durata], minuti: DURATE_PER_TIPO[s.tipo][s.durata] ? null : minutiFasi(s.durata, s.tipo) };
+    tipo = prep.tipo; pubblico = prep.pubblico;
     prep.proposte = proponiTre(pool());
     sfoglia = null;
     mostra('prepara');
   },
   imposta: (d) => {
     if (d.k === 'durata') {
-      if (d.v === 'su-misura') { prep.suMisura = true; prep.minuti = minutiFasi(prep.durata); }
+      if (d.v === 'su-misura') { prep.suMisura = true; prep.minuti = minutiFasi(prep.durata, prep.tipo); }
       else { prep.durata = Number(d.v); prep.suMisura = false; prep.minuti = null; }
     } else if (d.k === 'suono') {
       prep.suono = d.v === 'si';
@@ -454,6 +465,11 @@ const azioni = {
       prep[d.k] = d.v;
     }
     if (d.k === 'pubblico') { pubblico = d.v; prep.proposte = proponiTre(pool()); prep.scelta = null; }
+    if (d.k === 'tipo') {
+      tipo = prep.tipo = tipoValido(d.v);
+      if (prep.suMisura) prep.minuti = minutiFasi(prep.durata, prep.tipo);
+      prep.proposte = proponiTre(pool()); prep.scelta = null;
+    }
     mostra('prepara', true);
   },
   'durata-delta': (d) => { impostaDurataTotale(prep.durata + Number(d.d)); mostra('prepara', true); },
@@ -466,7 +482,7 @@ const azioni = {
     else { prep.minuti = nuovi; prep.durata = totale; }
     mostra('prepara', true);
   },
-  scegli: (d) => { prep.scelta = DOMANDE.find((x) => x.id === Number(d.id)); mostra('prepara', true); },
+  scegli: (d) => { prep.scelta = trovaDomanda(d.id); mostra('prepara', true); },
   sorprendi: () => {
     const tutte = pool();
     prep.scelta = tutte[Math.floor(Math.random() * tutte.length)];
@@ -477,6 +493,7 @@ const azioni = {
 
   sfoglia: () => {
     sfoglia = vistaCorrente === 'prepara' ? 'prepara' : 'sessione';
+    tipoElenco = tipo;
     cerca = ''; temaAperto = null; filtroSfoglia = pubblico;
     mostra(vistaCorrente, true);
   },
@@ -485,7 +502,7 @@ const azioni = {
   tema: (d) => { temaAperto = temaAperto === d.t ? null : d.t; aggiornaLista(); },
   'pub-sfoglia': (d) => { filtroSfoglia = d.v; aggiornaLista(); },
   'scegli-elenco': (d) => {
-    const scelta = DOMANDE.find((x) => x.id === Number(d.id));
+    const scelta = trovaDomanda(d.id);
     if (!scelta) return;
     if (sfoglia === 'prepara') {
       prep.scelta = scelta;
@@ -501,11 +518,11 @@ const azioni = {
 
   avvia: () => {
     salvaImpostazioni(prep);
-    luogo = prep.luogo; gruppo = prep.gruppo; pubblico = prep.pubblico; suono = prep.suono;
+    tipo = prep.tipo; luogo = prep.luogo; gruppo = prep.gruppo; pubblico = prep.pubblico; suono = prep.suono;
     ultimaDomanda = prep.scelta.testo;
     if (suono) preparaAudio();
     incontro = creaIncontro({
-      durata: prep.durata, minuti: prep.suMisura ? prep.minuti : undefined,
+      tipo: prep.tipo, durata: prep.durata, minuti: prep.suMisura ? prep.minuti : undefined,
       gruppo: prep.gruppo, luogo: prep.luogo, domanda: prep.scelta, ora: ora(),
     });
     usate = prep.scelta.id > 0 ? [prep.scelta.id] : [];
@@ -517,7 +534,7 @@ const azioni = {
   'solo-strumenti': () => {
     const s = leggiImpostazioni();
     azzera();
-    soloStrumenti = true; luogo = s.luogo; gruppo = s.gruppo; pubblico = s.pubblico; suono = s.suono;
+    soloStrumenti = true; tipo = s.tipo; luogo = s.luogo; gruppo = s.gruppo; pubblico = s.pubblico; suono = s.suono;
     if (suono) preparaAudio();
     richiediWakeLock();
     mostra('sessione');
